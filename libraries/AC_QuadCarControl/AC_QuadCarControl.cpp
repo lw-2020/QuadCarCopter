@@ -23,7 +23,10 @@ const AP_Param::GroupInfo AC_QuadCarControl::var_info[] = {
     AP_GROUPINFO("ACCEL_MAX", 6, AC_QuadCarControl, _max_accel, AC_BALANCE_MAX_ACCEL),
 
     AP_GROUPEND
-};
+};\
+
+//xiugai
+
 
 AC_QuadCarControl::AC_QuadCarControl(AP_Motors* motors, AP_AHRS_View* ahrs)
     : _pid_angle(AC_BALANCE_ANGLE_P, 0, AC_BALANCE_ANGLE_D, 0, 0, 0, 0, 0)
