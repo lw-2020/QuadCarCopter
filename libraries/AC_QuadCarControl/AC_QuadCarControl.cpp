@@ -23,7 +23,7 @@ const AP_Param::GroupInfo AC_QuadCarControl::var_info[] = {
     AP_GROUPINFO("ACCEL_MAX", 6, AC_QuadCarControl, _max_accel, AC_BALANCE_MAX_ACCEL),
 
     AP_GROUPEND
-};\
+};
 
 //xiugai
 
@@ -220,6 +220,17 @@ void AC_QuadCarControl::update(void)
         stop_quadcar_control = true;
     } else {
         stop_quadcar_control = false;
+    }
+
+    // 新增：通过CH_7控制电动泵PWM输出
+    // 假设PWM输出通道为5（实际请根据硬件分配）
+    const uint8_t PUMP_PWM_CHANNEL = 7;
+    if (hal.rcin->read(CH_9) > 1700) {
+        // 打开电动泵，输出高占空比PWM
+        SRV_Channels::set_output_pwm_chan(PUMP_PWM_CHANNEL, 2000); // 2000us脉宽
+    } else {
+        // 关闭电动泵，输出低占空比PWM
+        SRV_Channels::set_output_pwm_chan(PUMP_PWM_CHANNEL, 1000); // 1000us脉宽
     }
 
 }
