@@ -190,6 +190,7 @@ public:
         k_rcin16_mapped         = 155,
         k_LeftJointMotor        = 156,
         k_RightJointMotor       = 157,
+        k_pump                  = 158,    // 自定义 喷墨泵 功能
         k_nr_aux_servo_functions         ///< This must be the last enum value (only add new values _before_ this one)
     } Aux_servo_function_t;
 

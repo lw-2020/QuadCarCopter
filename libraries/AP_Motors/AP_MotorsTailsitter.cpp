@@ -49,13 +49,13 @@ void AP_MotorsTailsitter::init(motor_frame_class frame_class, motor_frame_type f
     SRV_Channels::set_aux_channel_default(SRV_Channel::k_tiltMotorLeft, CH_4);
     SRV_Channels::set_angle(SRV_Channel::k_tiltMotorLeft, SERVO_OUTPUT_RANGE);
 
-    // 左腿 to servo output 5
-    SRV_Channels::set_aux_channel_default(SRV_Channel::k_LeftJointMotor, CH_5);
-    SRV_Channels::set_angle(SRV_Channel::k_LeftJointMotor, SERVO_OUTPUT_RANGE);
+    // // 左腿 to servo output 5
+    // SRV_Channels::set_aux_channel_default(SRV_Channel::k_LeftJointMotor, CH_5);
+    // SRV_Channels::set_angle(SRV_Channel::k_LeftJointMotor, SERVO_OUTPUT_RANGE);
 
-    // 右腿 to servo output 6
-    SRV_Channels::set_aux_channel_default(SRV_Channel::k_RightJointMotor, CH_6);
-    SRV_Channels::set_angle(SRV_Channel::k_RightJointMotor, SERVO_OUTPUT_RANGE);
+    // // 右腿 to servo output 6
+    // SRV_Channels::set_aux_channel_default(SRV_Channel::k_RightJointMotor, CH_6);
+    // SRV_Channels::set_angle(SRV_Channel::k_RightJointMotor, SERVO_OUTPUT_RANGE);
 
     _mav_type = MAV_TYPE_VTOL_DUOROTOR;
 
@@ -114,18 +114,18 @@ void AP_MotorsTailsitter::output_to_motors()
     SRV_Channels::set_output_pwm(SRV_Channel::k_throttleRight, output_to_pwm(_actuator[1]));
 
     // use set scaled to allow a different PWM range on plane forward throttle, throttle range is 0 to 100
-    SRV_Channels::set_output_scaled(SRV_Channel::k_throttle, _S_GF*_actuator[2]*100);
+    // SRV_Channels::set_output_scaled(SRV_Channel::k_throttle, _S_GF*_actuator[2]*100);
 
-    SRV_Channels::set_output_scaled(SRV_Channel::k_tiltMotorLeft, _tilt_left*SERVO_OUTPUT_RANGE);
-    SRV_Channels::set_output_scaled(SRV_Channel::k_tiltMotorRight, _tilt_right*SERVO_OUTPUT_RANGE);
-    if(hal.rcin->read(CH_9) < 1500){
-            SRV_Channels::set_output_scaled(SRV_Channel::k_tiltMotorLeft, -TILT_OUTPUT_RATE*SERVO_OUTPUT_RANGE);
-            SRV_Channels::set_output_scaled(SRV_Channel::k_tiltMotorRight, -TILT_OUTPUT_RATE*SERVO_OUTPUT_RANGE);
-        }
+    // SRV_Channels::set_output_scaled(SRV_Channel::k_tiltMotorLeft, _tilt_left*SERVO_OUTPUT_RANGE);
+    // SRV_Channels::set_output_scaled(SRV_Channel::k_tiltMotorRight, _tilt_right*SERVO_OUTPUT_RANGE);
+    // if(hal.rcin->read(CH_9) < 1500){
+    //         SRV_Channels::set_output_scaled(SRV_Channel::k_tiltMotorLeft, -TILT_OUTPUT_RATE*SERVO_OUTPUT_RANGE);
+    //         SRV_Channels::set_output_scaled(SRV_Channel::k_tiltMotorRight, -TILT_OUTPUT_RATE*SERVO_OUTPUT_RANGE);
+    //     }
 
     // 平衡车 轮腿舵机
-    SRV_Channels::set_output_scaled(SRV_Channel::k_LeftJointMotor, (_high_out -_roll_out) * 9000);
-    SRV_Channels::set_output_scaled(SRV_Channel::k_RightJointMotor, (_high_out +_roll_out) * 9000);
+    // SRV_Channels::set_output_scaled(SRV_Channel::k_LeftJointMotor, (_high_out -_roll_out) * 9000);
+    // SRV_Channels::set_output_scaled(SRV_Channel::k_RightJointMotor, (_high_out +_roll_out) * 9000);
 
 }
 
