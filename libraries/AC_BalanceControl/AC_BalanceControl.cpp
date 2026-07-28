@@ -10,7 +10,7 @@ extern const AP_HAL::HAL& hal;
 
 // 定义用于控制泵的GPIO引脚编号
 // 注意: 选择一个可用的GPIO引脚，例如 55 对应 AUX5
-#define HAL_GPIO_PUMP_PIN 51  // 使用适合你硬件的GPIO引脚
+// #define HAL_GPIO_PUMP_PIN 51  // 使用适合你硬件的GPIO引脚
 
 // table of user settable parameters
 const AP_Param::GroupInfo AC_BalanceControl::var_info[] = {
@@ -90,10 +90,10 @@ void AC_BalanceControl::init()
 {
     balanceCAN = AP_BalanceCAN::get_singleton();
     // SRV_Channels::set_aux_channel_default(SRV_Channel::k_pump, CH_6);
-    // 初始化泵控制引脚为输出模式
-    hal.gpio->pinMode(HAL_GPIO_PUMP_PIN, HAL_GPIO_OUTPUT);
-    // 默认为低电平（泵关闭）
-    hal.gpio->write(HAL_GPIO_PUMP_PIN, 0);
+    // // 初始化泵控制引脚为输出模式
+    // hal.gpio->pinMode(HAL_GPIO_PUMP_PIN, HAL_GPIO_OUTPUT);
+    // // 默认为低电平（泵关闭）
+    // hal.gpio->write(HAL_GPIO_PUMP_PIN, 0);
 
     // 设置喷雾舵机行程范围（±_spray_angle 度），单位为 centi-degrees
     SRV_Channels::set_angle(SRV_Channel::k_scripting1, (uint16_t)(_spray_angle.get() * 100));
@@ -218,10 +218,11 @@ void AC_BalanceControl::update(void)
         return;
     }
 
-    // if (balanceCAN == nullptr) {
-    //     gcs().send_text(MAV_SEVERITY_WARNING, "balanceCAN = nullptr");
-    //     return;
-    // }
+    if (balanceCAN == nullptr) {
+        gcs().send_text(MAV_SEVERITY_WARNING, "balanceCAN = nullptr");
+        return;
+    }
+    
     if (_ahrs == nullptr) {
         gcs().send_text(MAV_SEVERITY_WARNING, "_ahrs = nullptr");
         return;
@@ -316,18 +317,18 @@ void AC_BalanceControl::update(void)
     //     SRV_Channels::set_output_pwm(SRV_Channel::k_pump, 1100);
     // }
 
-    if (hal.rcin->read(CH_9) > 1700) {         
-    // 打开喷墨泵，输出高电平
-        hal.gpio->write(HAL_GPIO_PUMP_PIN, 1);  // 设置为高电平
-        gcs().send_text(MAV_SEVERITY_INFO, "Pump: ON, RC9=%d", hal.rcin->read(CH_9));
+    // if (hal.rcin->read(CH_9) > 1700) {         
+    // // 打开喷墨泵，输出高电平
+    //     hal.gpio->write(HAL_GPIO_PUMP_PIN, 1);  // 设置为高电平
+    //     gcs().send_text(MAV_SEVERITY_INFO, "Pump: ON, RC9=%d", hal.rcin->read(CH_9));
 
-        // 在GPIO切换后添加此代码
-        bool pin_state = hal.gpio->read(HAL_GPIO_PUMP_PIN);
-        gcs().send_text(MAV_SEVERITY_INFO, "GPIO %d state: %d", HAL_GPIO_PUMP_PIN, (int)pin_state);
-    } else { 
-    // 关闭喷墨泵，输出低电平
-    hal.gpio->write(HAL_GPIO_PUMP_PIN, 0);  // 设置为低电平
-    }
+    //     // 在GPIO切换后添加此代码
+    //     bool pin_state = hal.gpio->read(HAL_GPIO_PUMP_PIN);
+    //     gcs().send_text(MAV_SEVERITY_INFO, "GPIO %d state: %d", HAL_GPIO_PUMP_PIN, (int)pin_state);
+    // } else { 
+    // // 关闭喷墨泵，输出低电平
+    // hal.gpio->write(HAL_GPIO_PUMP_PIN, 0);  // 设置为低电平
+    // }
 
 
     // const auto timeus_start = AP_HAL::micros64();
