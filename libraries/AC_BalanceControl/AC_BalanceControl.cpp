@@ -40,11 +40,11 @@ const AP_Param::GroupInfo AC_BalanceControl::var_info[] = {
     AP_GROUPINFO("F_LAND_T", 12, AC_BalanceControl, _landing_thr, AC_BALANCE_LANDING_THR),
 
     // 喷雾舵机控制参数
-    AP_GROUPINFO("SPRAY_MODE", 13, AC_BalanceControl, _spray_mode, 0),
+    AP_GROUPINFO("SPY_MODE", 13, AC_BalanceControl, _spray_mode, 0),
 
-    AP_GROUPINFO("SPRAY_CH", 14, AC_BalanceControl, _spray_ch, 10),
+    AP_GROUPINFO("SPY_CH", 14, AC_BalanceControl, _spray_ch, 10),
 
-    AP_GROUPINFO("SPRAY_ANG", 15, AC_BalanceControl, _spray_angle, 45.0f),
+    AP_GROUPINFO("SPY_ANG", 15, AC_BalanceControl, _spray_angle, 45.0f),
 
     // AP_GROUPINFO("JOT_OFFSET_T", 13, AC_BalanceControl, Joint_Offset_B, AC_BALANCE_JOINT_OFS_B),
 
@@ -611,6 +611,7 @@ void AC_BalanceControl::spray_control()
     if (ch_idx >= hal.rcin->num_channels()) {
         // 通道无效，舵机保持中位
         SRV_Channels::set_output_scaled(SRV_Channel::k_scripting1, 0);
+        gcs().send_text(MAV_SEVERITY_WARNING, "Spray: invalid RC channel %d", (int)_spray_ch.get());
         return;
     }
     uint16_t pwm = hal.rcin->read(ch_idx);
@@ -635,6 +636,17 @@ void AC_BalanceControl::spray_control()
     // 限幅并以 centi-degrees 输出到舵机
     out_deg = constrain_float(out_deg, -angle_max, angle_max);
     SRV_Channels::set_output_scaled(SRV_Channel::k_scripting1, (int16_t)(out_deg * 100.0f));
+
+    // ---- 调试信息：仅在拨杆按压/复位状态发生变化时打印，避免刷屏 ----
+    // 在GPIO/舵机输出切换后，读回实际下发的数值用于核对
+    static bool last_pressed = false;
+    bool        pressed      = (out_deg > 0.0f);
+    if (_spray_mode.get() == 1 && pressed != last_pressed) {
+        last_pressed = pressed;
+        float readback = SRV_Channels::get_output_scaled(SRV_Channel::k_scripting1);
+        gcs().send_text(MAV_SEVERITY_INFO, "Spray: %s, ch%d PWM=%u, out=%.1f",
+                         pressed ? "PRESS" : "RESET", (int)_spray_ch.get(), pwm, readback);
+    }
 }
 
 // void AC_BalanceControl::debug_info()
