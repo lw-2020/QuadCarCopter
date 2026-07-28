@@ -84,6 +84,9 @@ public:
     void pilot_control();
     // void set_control_mode();
 
+    // 喷雾舵机控制：用遥控器拨杆通道或旋钮通道控制舵机按压喷雾按钮
+    void spray_control();
+
     void update(void);
 
     void setAltOK(bool sta) { alt_ok = sta; }
@@ -169,6 +172,12 @@ protected:
 
     AP_Float _take_off_thr;
     AP_Float _landing_thr;
+
+    ///////////////////////////////////////////////////////
+    // 喷雾舵机参数
+    AP_Int8  _spray_mode;  // 0=关闭, 1=拨杆控制, 2=旋钮控制
+    AP_Int8  _spray_ch;    // 控制通道号（1-based），拨杆或旋钮所在的遥控器通道
+    AP_Float _spray_angle; // 按压舵机的最大旋转角度（度）
 
     ///////////////////////////////////////////////////////
     // 直立环参数

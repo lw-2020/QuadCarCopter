@@ -39,6 +39,13 @@ const AP_Param::GroupInfo AC_BalanceControl::var_info[] = {
 
     AP_GROUPINFO("F_LAND_T", 12, AC_BalanceControl, _landing_thr, AC_BALANCE_LANDING_THR),
 
+    // 喷雾舵机控制参数
+    AP_GROUPINFO("SPRAY_MODE", 13, AC_BalanceControl, _spray_mode, 0),
+
+    AP_GROUPINFO("SPRAY_CH", 14, AC_BalanceControl, _spray_ch, 10),
+
+    AP_GROUPINFO("SPRAY_ANG", 15, AC_BalanceControl, _spray_angle, 45.0f),
+
     // AP_GROUPINFO("JOT_OFFSET_T", 13, AC_BalanceControl, Joint_Offset_B, AC_BALANCE_JOINT_OFS_B),
 
     // AP_GROUPINFO("JOT_SLOPE_T", 14, AC_BalanceControl, Joint_Slope_R, AC_BALANCE_JOINT_SLO_B),
@@ -86,7 +93,10 @@ void AC_BalanceControl::init()
     // 初始化泵控制引脚为输出模式
     hal.gpio->pinMode(HAL_GPIO_PUMP_PIN, HAL_GPIO_OUTPUT);
     // 默认为低电平（泵关闭）
-    hal.gpio->write(HAL_GPIO_PUMP_PIN, 0);    
+    hal.gpio->write(HAL_GPIO_PUMP_PIN, 0);
+
+    // 设置喷雾舵机行程范围（±_spray_angle 度），单位为 centi-degrees
+    SRV_Channels::set_angle(SRV_Channel::k_scripting1, (uint16_t)(_spray_angle.get() * 100));
 }
 
 /**************************************************************************
@@ -274,6 +284,9 @@ void AC_BalanceControl::update(void)
 
     // 遥控输入
     pilot_control();
+
+    // 喷雾舵机控制
+    spray_control();
 
     // 检查是否失控
     // if (Pick_Up(_ahrs->get_accel_ef().z, angle_y, balanceCAN->getSpeed(0), balanceCAN->getSpeed(1))) {
@@ -574,6 +587,54 @@ void AC_BalanceControl::pilot_control()
     // } else {
     //     _movement_h = pwm_h;
     // }
+}
+
+/**************************************************************************
+Function: Spray servo control
+函数功能：喷雾舵机控制
+说明    ：通过遥控器拨杆通道或旋钮通道控制舵机臂按压喷雾罐按钮
+          _spray_mode = 0：关闭，舵机回到中位（不喷雾）
+          _spray_mode = 1：拨杆控制，拨杆高位舵机旋转 +_spray_angle 度按压喷雾，
+                           低位反向旋转 -_spray_angle 度复位
+          _spray_mode = 2：旋钮控制，将旋钮通道 PWM 映射到 ±_spray_angle 度输出
+**************************************************************************/
+void AC_BalanceControl::spray_control()
+{
+    // 关闭喷雾功能：舵机保持中位
+    if (_spray_mode.get() == 0) {
+        SRV_Channels::set_output_scaled(SRV_Channel::k_scripting1, 0);
+        return;
+    }
+
+    // 读取控制通道 PWM（通道号为 1-based，转换为 0-based 索引）
+    uint8_t ch_idx = (uint8_t)(_spray_ch.get() - 1);
+    if (ch_idx >= hal.rcin->num_channels()) {
+        // 通道无效，舵机保持中位
+        SRV_Channels::set_output_scaled(SRV_Channel::k_scripting1, 0);
+        return;
+    }
+    uint16_t pwm = hal.rcin->read(ch_idx);
+
+    float angle_max = _spray_angle.get(); // 最大旋转角度（度）
+    float out_deg   = 0.0f;               // 舵机输出角度（度）
+
+    if (_spray_mode.get() == 1) {
+        // 拨杆控制：高位按压，低位反向复位
+        if (pwm >= 1500) {
+            out_deg = angle_max;   // 高位：正向旋转按压喷雾按钮
+        } else {
+            out_deg = -angle_max;  // 低位：反向旋转相同角度复位
+        }
+    } else {
+        // 旋钮控制：将 PWM 归一化到 [-1, 1] 后映射到 ±angle_max
+        float norm = (float)((int16_t)pwm - 1500) / 500.0f;
+        norm = constrain_float(norm, -1.0f, 1.0f);
+        out_deg = norm * angle_max;
+    }
+
+    // 限幅并以 centi-degrees 输出到舵机
+    out_deg = constrain_float(out_deg, -angle_max, angle_max);
+    SRV_Channels::set_output_scaled(SRV_Channel::k_scripting1, (int16_t)(out_deg * 100.0f));
 }
 
 // void AC_BalanceControl::debug_info()
